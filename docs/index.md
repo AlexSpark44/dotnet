@@ -2,6 +2,17 @@
 
 This repository keeps architecture and engineering guidance under `docs/`.
 
+## Cloud-Native Proof (No Deployment)
+
+This site publishes **evidence produced by CI**.
+
+## Evidence
+
+- [OpenAPI](evidence/openapi/)
+- [Coverage](evidence/coverage/)
+- [Benchmarks](evidence/benchmarks/)
+- [Traces (screenshots)](evidence/traces/)
+
 ## Contents
 
 - [Architecture](architecture.md)
@@ -26,10 +37,3 @@ docs/
     openapi/           # rendered API docs
     traces/            # screenshots + captions
 ```
-
-## Evidence folders
-
-- `evidence/coverage/` — generated HTML coverage reports.
-- `evidence/benchmarks/` — generated benchmark reports.
-- `evidence/openapi/` — rendered OpenAPI documentation.
-- `evidence/traces/` — trace screenshots and short captions.
