@@ -1,6 +1,6 @@
-# Branch Platform
+# Branch Platform (.NET 8 LTS)
 
-Consultancy-grade .NET 8 platform scaffold implementing **Clean Architecture**, **observability**, **security by design**, and **reliability patterns**.
+Production-grade Clean Architecture platform with an Orders bounded context, Azure-first infrastructure, and deployment tooling where possible in C#.
 
 ## Repository Structure
 
@@ -14,35 +14,28 @@ Consultancy-grade .NET 8 platform scaffold implementing **Clean Architecture**, 
 /tests
   /Branch.Platform.UnitTests
   /Branch.Platform.IntegrationTests
+/infra
+  Pulumi C# Azure provisioning
+/deploy
+  C# deployment helper CLI
+/docs
+  engineering and operations standards/templates
 ```
 
 ## Architecture Decisions
 
-- **Clean Architecture boundaries**: Domain owns business invariants, Application owns use-cases/validation, Infrastructure owns EF/Redis/outbox, API owns transport and cross-cutting concerns.
-- **Contract-first API**: explicit request/response contracts in `Contracts` for `/api/v1/orders`.
-- **Reliability**:
-  - Idempotency key for create order.
-  - Outbox table + background dispatcher scaffold.
-  - Retry + timeout resilience pipeline with jitter.
-- **Observability**:
-  - OpenTelemetry traces + metrics + logs.
-  - Correlation ID middleware.
-  - Health endpoints (`/health/live`, `/health/ready`).
-  - Cache hit/miss metrics via `Branch.Platform.Cache` meter.
-- **Security by design**:
-  - JWT bearer/OIDC skeleton.
-  - ProblemDetails + FluentValidation.
-  - Rate limiting and secure headers middleware.
-  - Configuration placeholders for Azure Key Vault.
+- **Clean Architecture**: strict boundary ownership by layer.
+- **Contract-first API**: transport DTOs live in Contracts; no EF entities leak into API.
+- **Reliability**: idempotent create, outbox scaffold, retries with jitter + timeout, cancellation token propagation.
+- **Observability**: OpenTelemetry traces/metrics/logging, request correlation IDs, health endpoints.
+- **Security**: JWT/OIDC-ready auth, policy-based authorization (`orders.write`, `orders.read`), ProblemDetails, rate limiting.
+- **Performance**: EF projections + `AsNoTracking`, indexes, Redis cache-aside with cache metrics.
 
-## Orders Bounded Context
+## Orders API
 
-- Domain entities: `Order`, `OrderItem`, `Money`.
-- Use cases:
-  - `CreateOrder`
-  - `GetOrderById` (cache-aside with TTL strategy)
-  - `ListOrders` (paged)
-- Persistence: EF Core/Postgres with indexes and no raw SQL.
+- `POST /api/v1/orders` (requires `Idempotency-Key`, `orders.write` policy)
+- `GET /api/v1/orders/{id}` (`orders.read` policy, cache-aside)
+- `GET /api/v1/orders` paged list (`orders.read` policy)
 
 ## Local Run
 
@@ -50,37 +43,48 @@ Consultancy-grade .NET 8 platform scaffold implementing **Clean Architecture**, 
 docker compose up --build
 ```
 
-## Testing
+## Tests
 
-- Unit: domain invariants and idempotency behavior in handlers.
-- Integration (Testcontainers):
-  - POST create order then GET returns it.
-  - Cache path scenario (double get).
-  - Idempotency returns same order id.
+- Unit tests in `tests/Branch.Platform.UnitTests`
+- Integration tests in `tests/Branch.Platform.IntegrationTests` using Testcontainers (Postgres + Redis)
 
-## Deployment and Rollback Strategy
+## Azure Provisioning (Pulumi C#)
 
-Recommended progressive delivery model:
+```bash
+cd infra
+pulumi stack init dev # once
+pulumi up -s dev
+```
 
-- **Canary** for low-risk validation under production traffic.
-- **Blue/Green** for deterministic cutover and fast rollback.
-- Keep schema changes backward-compatible; activate write-path changes after read compatibility is proven.
-- Maintain feature flags to disable risky behavior without redeploying.
+Outputs include Container App URL, ACR login server, key vault name, and major connection endpoints.
+
+## Deployment (C# helper)
+
+```bash
+dotnet run --project deploy/src/Branch.Platform.Deploy -- all
+```
+
+Environment variables:
+- `BRANCH_ACR_SERVER`
+- `BRANCH_IMAGE_NAME`
+- `BRANCH_IMAGE_TAG`
+- `BRANCH_PULUMI_STACK`
+
+## Rollback Strategy
+
+Use Container Apps revision-based rollback:
+1. Deploy as new revision.
+2. Shift traffic gradually.
+3. On error budget breach, route 100% traffic back to prior healthy revision.
+4. Keep schema backward-compatible during rollout to allow instant app rollback.
+
+## Caching Notes
+
+- Cache-aside for `GetOrderById` with measured TTL strategy.
+- Current invalidation: TTL-first for scaffold simplicity.
+- Recommended hardening: outbox-driven cache invalidation events.
 
 ## Trade-offs
 
-- Outbox dispatcher is scaffolded (logs dispatch) and should be wired to broker/topic of choice.
-- Integration tests rely on migrations; add concrete migration files before production cutover.
-
-## Caching Notes (Strategy + Invalidation)
-
-- `GetOrderById` uses cache-aside with Redis and TTL derived from order size.
-- Invalidation strategy is **TTL-first** for this scaffold; writes currently rely on natural expiry.
-- For production hardening, prefer event-driven invalidation via outbox-dispatched `OrderUpdated`/`OrderCancelled` events.
-- Cache behavior is measurable through hit/miss metrics (`Branch.Platform.Cache`) and spans around get/set operations.
-
-## Pattern Justification (Avoid Overengineering)
-
-- Read repository projection was added only for hot read paths to reduce aggregate materialization overhead.
-- Outbox is scaffolded because external integration reliability requires it; dispatcher implementation remains intentionally minimal.
-- Policies and telemetry are kept centralized to avoid scattering cross-cutting concerns through controllers.
+- Outbox dispatcher is scaffolded (logging-only dispatch) and must be wired to real messaging.
+- Pulumi networking for Postgres is currently public-access with restrictive firewall starter rule; move to private networking for higher security environments.

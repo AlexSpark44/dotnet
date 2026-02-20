@@ -1,0 +1,4 @@
+name: branch-platform-infra
+description: Azure infrastructure for Branch Platform API on Container Apps
+runtime: dotnet
+main: ./
