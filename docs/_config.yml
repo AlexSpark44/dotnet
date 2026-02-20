@@ -1,0 +1,6 @@
+title: Cloud-Native Proof (No Deployment)
+theme: minima
+markdown: kramdown
+exclude:
+  - bin
+  - obj
