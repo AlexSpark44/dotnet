@@ -16,6 +16,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
             entity.ToTable("orders");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.CreatedAtUtc);
+            entity.HasIndex(x => new { x.CustomerId, x.CreatedAtUtc });
             entity.Property(x => x.Currency).HasMaxLength(3);
             entity.Property(x => x.Status).HasMaxLength(32);
             entity.OwnsMany(x => x.Items, items =>
@@ -45,6 +46,8 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
         {
             entity.ToTable("idempotency_records");
             entity.HasKey(x => x.Key);
+            entity.HasIndex(x => x.CreatedAtUtc);
+            entity.HasIndex(x => x.OrderId).IsUnique();
         });
     }
 }

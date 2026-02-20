@@ -18,7 +18,9 @@ public class OrdersApiTests : IClassFixture<TestPlatformFactory>
     public async Task PostThenGet_ShouldReturnCreatedOrder()
     {
         var request = new CreateOrderRequest(Guid.NewGuid(), "USD", new List<CreateOrderItemRequest> { new(Guid.NewGuid(), 2, 10) });
-        var postResponse = await _client.PostAsJsonAsync("/api/v1/orders", request);
+        using var postRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/orders") { Content = JsonContent.Create(request) };
+        postRequest.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        var postResponse = await _client.SendAsync(postRequest);
         postResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var orderId = await postResponse.Content.ReadFromJsonAsync<Guid>();
@@ -30,7 +32,9 @@ public class OrdersApiTests : IClassFixture<TestPlatformFactory>
     public async Task GetOrder_Twice_ShouldUseCachePath()
     {
         var request = new CreateOrderRequest(Guid.NewGuid(), "USD", new List<CreateOrderItemRequest> { new(Guid.NewGuid(), 1, 20) });
-        var postResponse = await _client.PostAsJsonAsync("/api/v1/orders", request);
+        using var postRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/orders") { Content = JsonContent.Create(request) };
+        postRequest.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        var postResponse = await _client.SendAsync(postRequest);
         var orderId = await postResponse.Content.ReadFromJsonAsync<Guid>();
 
         var first = await _client.GetAsync($"/api/v1/orders/{orderId}");

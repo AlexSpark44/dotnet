@@ -20,6 +20,7 @@ public static class DependencyInjection
             options.Configuration = configuration.GetConnectionString("Redis"));
 
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IOrderReadRepository, OrderReadRepository>();
         services.AddScoped<IOrderCache, RedisOrderCache>();
         services.AddScoped<IOutboxWriter, OutboxWriter>();
         services.AddScoped<IIdempotencyStore, IdempotencyStore>();

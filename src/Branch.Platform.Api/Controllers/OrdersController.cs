@@ -10,29 +10,33 @@ namespace Branch.Platform.Api.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/orders")]
-[Authorize]
 public sealed class OrdersController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    [AllowAnonymous]
+    [Authorize(Policy = "orders.write")]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateOrderRequest request, CancellationToken cancellationToken)
     {
-        var idempotencyKey = HttpContext.Request.Headers["Idempotency-Key"].ToString();
+        if (!HttpContext.Request.Headers.TryGetValue("Idempotency-Key", out var idempotencyKey) || string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "Idempotency-Key header is required.");
+        }
+
         var command = new CreateOrderCommand(new CreateOrderDto(
             request.CustomerId,
             request.Currency,
             request.Items.Select(x => new CreateOrderItemDto(x.ProductId, x.Quantity, x.UnitPrice)).ToList(),
-            idempotencyKey));
+            idempotencyKey.ToString()));
 
         var id = await mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id, version = "1" }, id);
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = "orders.read")]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetOrderByIdQuery(id), cancellationToken);
@@ -43,7 +47,7 @@ public sealed class OrdersController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
+    [Authorize(Policy = "orders.read")]
     public async Task<ActionResult<PagedOrdersResponse>> List([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new ListOrdersQuery(pageNumber, pageSize), cancellationToken);

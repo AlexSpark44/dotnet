@@ -1,13 +1,8 @@
-using System.Diagnostics;
-using System.Threading.RateLimiting;
 using Asp.Versioning;
 using Branch.Platform.Api.Infrastructure;
 using Branch.Platform.Application;
 using Branch.Platform.Infrastructure;
-using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -36,7 +31,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.RequireHttpsMetadata = true;
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("orders.write", policy => policy.RequireAuthenticatedUser().RequireClaim("scope", "orders.write"));
+    options.AddPolicy("orders.read", policy => policy.RequireAuthenticatedUser().RequireClaim("scope", "orders.read"));
+});
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -56,6 +55,7 @@ builder.Services.AddHealthChecks()
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService("Branch.Platform.Api"))
     .WithTracing(t => t
+        .AddSource("Branch.Platform.Orders")
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddOtlpExporter())

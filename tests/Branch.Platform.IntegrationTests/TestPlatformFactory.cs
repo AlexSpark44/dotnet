@@ -1,4 +1,5 @@
 using Branch.Platform.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -31,9 +32,16 @@ public sealed class TestPlatformFactory : WebApplicationFactory<Program>, IAsync
         builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
         builder.ConfigureServices(services =>
         {
-            var scope = services.BuildServiceProvider().CreateScope();
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+            }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
+
+            var serviceProvider = services.BuildServiceProvider();
+            using var scope = serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<PlatformDbContext>();
-            db.Database.Migrate();
+            db.Database.EnsureCreated();
         });
     }
 }
