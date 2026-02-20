@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: branch_platform
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore Branch.Platform.sln
+      - run: dotnet build Branch.Platform.sln --no-restore -c Release
+      - run: dotnet test tests/Branch.Platform.UnitTests/Branch.Platform.UnitTests.csproj --no-build -c Release
+      - run: dotnet test tests/Branch.Platform.IntegrationTests/Branch.Platform.IntegrationTests.csproj --no-build -c Release

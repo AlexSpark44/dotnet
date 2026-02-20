@@ -1,0 +1,4 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+WORKDIR /src
+COPY . .
+ENTRYPOINT ["dotnet", "ef", "database", "update", "--project", "src/Branch.Platform.Infrastructure/Branch.Platform.Infrastructure.csproj", "--startup-project", "src/Branch.Platform.Api/Branch.Platform.Api.csproj"]
