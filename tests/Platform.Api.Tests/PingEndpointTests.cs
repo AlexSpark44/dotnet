@@ -25,4 +25,6 @@ public class PingEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.NotNull(payload);
         Assert.Equal("pong", payload!.Message);
     }
+
+    private sealed record PingResponse(string Message);
 }
