@@ -21,12 +21,12 @@ Capture a single trace that demonstrates:
 
 Store the screenshot at:
 
-- `docs/assets/jaeger-orders-trace.png`
+- `docs/evidence/traces/jaeger-orders-trace.png`
 
 Then embed it here:
 
 ```md
-![Jaeger trace for Orders vertical slice](assets/jaeger-orders-trace.png)
+![Jaeger trace for Orders vertical slice](evidence/traces/jaeger-orders-trace.png)
 ```
 
 ## Minimal implementation file list (recommended)
