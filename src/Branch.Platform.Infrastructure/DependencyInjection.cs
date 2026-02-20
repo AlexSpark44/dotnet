@@ -11,7 +11,7 @@ namespace Branch.Platform.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, bool runOutboxDispatcher = false)
     {
         services.AddDbContext<PlatformDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Postgres")));
@@ -24,7 +24,10 @@ public static class DependencyInjection
         services.AddScoped<IOrderCache, RedisOrderCache>();
         services.AddScoped<IOutboxWriter, OutboxWriter>();
         services.AddScoped<IIdempotencyStore, IdempotencyStore>();
-        services.AddHostedService<OutboxDispatcherService>();
+        if (runOutboxDispatcher)
+        {
+            services.AddHostedService<OutboxDispatcherService>();
+        }
 
         return services;
     }

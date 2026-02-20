@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, cfg) => cfg.ReadFrom.Configuration(context.Configuration).WriteTo.Console());
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, runOutboxDispatcher: false);
 builder.Services.AddControllers();
 
 builder.Services.AddApiVersioning(options =>

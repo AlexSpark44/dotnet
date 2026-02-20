@@ -11,6 +11,7 @@ Production-grade Clean Architecture platform with an Orders bounded context, Azu
   /Branch.Platform.Domain
   /Branch.Platform.Infrastructure
   /Branch.Platform.Contracts
+  /Branch.Platform.Worker
 /tests
   /Branch.Platform.UnitTests
   /Branch.Platform.IntegrationTests
@@ -41,6 +42,8 @@ Production-grade Clean Architecture platform with an Orders bounded context, Azu
 
 ```bash
 docker compose up --build
+# API: http://localhost:8080
+# Jaeger UI: http://localhost:16686
 ```
 
 ## Tests
@@ -88,3 +91,9 @@ Use Container Apps revision-based rollback:
 
 - Outbox dispatcher is scaffolded (logging-only dispatch) and must be wired to real messaging.
 - Pulumi networking for Postgres is currently public-access with restrictive firewall starter rule; move to private networking for higher security environments.
+
+
+## Background Worker
+
+- `Branch.Platform.Worker` runs infrastructure background processes (e.g., outbox dispatcher) outside API request pipeline.
+- In local compose, `worker` runs as a separate container to mirror production separation-of-concerns.
