@@ -1,5 +1,8 @@
 # Branch Platform (.NET 8 LTS)
 
+![CI](../../actions/workflows/ci.yml/badge.svg)
+![Pages](../../actions/workflows/pages.yml/badge.svg)
+
 Production-grade Clean Architecture platform with an Orders bounded context, Azure-first infrastructure, and deployment tooling where possible in C#.
 
 ## Repository Structure
