@@ -1,3 +1,5 @@
+using Branch.Platform.Domain.Orders;
+
 namespace Branch.Platform.Application.Orders;
 
 public sealed record OrderReadModel(
@@ -5,7 +7,7 @@ public sealed record OrderReadModel(
     Guid CustomerId,
     string Currency,
     decimal TotalAmount,
-    string Status,
+    OrderStatus Status,
     DateTime CreatedAtUtc,
     IReadOnlyList<OrderItemReadModel> Items);
 

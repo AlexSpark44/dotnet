@@ -56,6 +56,7 @@ builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService("Branch.Platform.Api"))
     .WithTracing(t => t
         .AddSource("Branch.Platform.Orders")
+        .AddSource("Branch.Platform.Application")
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddOtlpExporter())

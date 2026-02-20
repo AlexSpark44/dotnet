@@ -42,7 +42,7 @@ public sealed class OrdersController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetOrderByIdQuery(id), cancellationToken);
         if (result is null) return NotFound();
 
-        return Ok(new OrderResponse(result.Id, result.CustomerId, result.Currency, result.TotalAmount, result.Status, result.CreatedAtUtc,
+        return Ok(new OrderResponse(result.Id, result.CustomerId, result.Currency, result.TotalAmount, result.Status.ToString(), result.CreatedAtUtc,
             result.Items.Select(i => new OrderItemResponse(i.ProductId, i.Quantity, i.UnitPrice, i.LineTotal)).ToList()));
     }
 
@@ -51,7 +51,7 @@ public sealed class OrdersController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<PagedOrdersResponse>> List([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(new ListOrdersQuery(pageNumber, pageSize), cancellationToken);
-        var payload = new PagedOrdersResponse(result.Select(r => new OrderResponse(r.Id, r.CustomerId, r.Currency, r.TotalAmount, r.Status, r.CreatedAtUtc,
+        var payload = new PagedOrdersResponse(result.Select(r => new OrderResponse(r.Id, r.CustomerId, r.Currency, r.TotalAmount, r.Status.ToString(), r.CreatedAtUtc,
             r.Items.Select(i => new OrderItemResponse(i.ProductId, i.Quantity, i.UnitPrice, i.LineTotal)).ToList())).ToList(), pageNumber, pageSize);
         return Ok(payload);
     }

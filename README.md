@@ -71,3 +71,16 @@ Recommended progressive delivery model:
 
 - Outbox dispatcher is scaffolded (logs dispatch) and should be wired to broker/topic of choice.
 - Integration tests rely on migrations; add concrete migration files before production cutover.
+
+## Caching Notes (Strategy + Invalidation)
+
+- `GetOrderById` uses cache-aside with Redis and TTL derived from order size.
+- Invalidation strategy is **TTL-first** for this scaffold; writes currently rely on natural expiry.
+- For production hardening, prefer event-driven invalidation via outbox-dispatched `OrderUpdated`/`OrderCancelled` events.
+- Cache behavior is measurable through hit/miss metrics (`Branch.Platform.Cache`) and spans around get/set operations.
+
+## Pattern Justification (Avoid Overengineering)
+
+- Read repository projection was added only for hot read paths to reduce aggregate materialization overhead.
+- Outbox is scaffolded because external integration reliability requires it; dispatcher implementation remains intentionally minimal.
+- Policies and telemetry are kept centralized to avoid scattering cross-cutting concerns through controllers.

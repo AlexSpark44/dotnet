@@ -14,12 +14,12 @@ public sealed class Order : Entity
         CustomerId = customerId;
         Currency = currency;
         CreatedAtUtc = DateTime.UtcNow;
-        Status = "Created";
+        Status = OrderStatus.Created;
     }
 
     public Guid Id { get; private set; }
     public Guid CustomerId { get; private set; }
-    public string Status { get; private set; } = default!;
+    public OrderStatus Status { get; private set; }
     public string Currency { get; private set; } = default!;
     public DateTime CreatedAtUtc { get; private set; }
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();

@@ -61,4 +61,20 @@ public class OrdersApiTests : IClassFixture<TestPlatformFactory>
 
         id1.Should().Be(id2);
     }
+
+    [Fact]
+    public async Task ListOrders_ShouldReturnOk()
+    {
+        var response = await _client.GetAsync("/api/v1/orders?pageNumber=1&pageSize=10");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task CreateOrder_WithoutIdempotencyKey_ShouldReturnBadRequest()
+    {
+        var request = new CreateOrderRequest(Guid.NewGuid(), "USD", new List<CreateOrderItemRequest> { new(Guid.NewGuid(), 1, 10) });
+        var response = await _client.PostAsJsonAsync("/api/v1/orders", request);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
 }

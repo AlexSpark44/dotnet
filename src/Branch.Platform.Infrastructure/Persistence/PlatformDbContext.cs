@@ -18,7 +18,7 @@ public sealed class PlatformDbContext(DbContextOptions<PlatformDbContext> option
             entity.HasIndex(x => x.CreatedAtUtc);
             entity.HasIndex(x => new { x.CustomerId, x.CreatedAtUtc });
             entity.Property(x => x.Currency).HasMaxLength(3);
-            entity.Property(x => x.Status).HasMaxLength(32);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.OwnsMany(x => x.Items, items =>
             {
                 items.ToTable("order_items");

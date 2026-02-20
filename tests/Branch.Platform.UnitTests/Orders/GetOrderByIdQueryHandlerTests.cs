@@ -1,4 +1,5 @@
 using Branch.Platform.Application.Orders;
+using Branch.Platform.Domain.Orders;
 using FluentAssertions;
 using Moq;
 
@@ -13,7 +14,7 @@ public class GetOrderByIdQueryHandlerTests
         var readRepository = new Mock<IOrderReadRepository>();
         var cache = new Mock<IOrderCache>();
         var metrics = new Mock<ICacheMetrics>();
-        var cached = new OrderReadModel(orderId, Guid.NewGuid(), "USD", 10m, "Created", DateTime.UtcNow,
+        var cached = new OrderReadModel(orderId, Guid.NewGuid(), "USD", 10m, OrderStatus.Created, DateTime.UtcNow,
             new List<OrderItemReadModel> { new(Guid.NewGuid(), 1, 10m, 10m) });
 
         cache.Setup(x => x.GetAsync(orderId, It.IsAny<CancellationToken>())).ReturnsAsync(cached);
