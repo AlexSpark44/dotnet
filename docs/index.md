@@ -1,4 +1,4 @@
-# Cloud-Native .NET Proof
+# Cloud-Native Proof (No Deployment)
 
 - [Architecture](architecture.md)
 - [Reliability](reliability.md)
