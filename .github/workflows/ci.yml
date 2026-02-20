@@ -1,29 +1,60 @@
-name: ci
+name: CI
 
 on:
   push:
+    branches: [ "main" ]
   pull_request:
 
 jobs:
-  build-test:
+  test:
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: branch_platform
-          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-        ports: ["5432:5432"]
+          POSTGRES_USER: postgres
+          POSTGRES_DB: platform
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
       redis:
         image: redis:7
-        ports: ["6379:6379"]
+        ports: [ "6379:6379" ]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
-      - run: dotnet restore Branch.Platform.sln
-      - run: dotnet build Branch.Platform.sln --no-restore -c Release
-      - run: dotnet test tests/Branch.Platform.UnitTests/Branch.Platform.UnitTests.csproj --no-build -c Release
-      - run: dotnet test tests/Branch.Platform.IntegrationTests/Branch.Platform.IntegrationTests.csproj --no-build -c Release
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test (with coverage)
+        run: >
+          dotnet test -c Release --no-build
+          /p:CollectCoverage=true
+          /p:CoverletOutputFormat=lcov
+          /p:CoverletOutput=./TestResults/coverage/
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: "**/TestResults/coverage/coverage.info"
