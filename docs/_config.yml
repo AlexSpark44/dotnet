@@ -1,0 +1,6 @@
+title: Cloud-Native .NET Proof
+theme: minima
+markdown: kramdown
+exclude:
+  - bin
+  - obj
