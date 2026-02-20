@@ -1,0 +1,42 @@
+name: Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Optional: generate a very simple static site from markdown using a lightweight tool
+      # But you can also publish raw markdown via a static generator later.
+      # For now: publish docs as-is by adding a minimal index.html redirect.
+      - name: Prepare site
+        run: |
+          mkdir -p _site
+          cp -r docs/* _site/
+          # Add a simple landing page if you want HTML later; markdown still shows in repo view.
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

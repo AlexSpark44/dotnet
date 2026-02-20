@@ -1,0 +1,7 @@
+config:
+  azure-native:location: eastus
+  branch-platform-infra:environmentName: branch-platform-dev
+  branch-platform-infra:containerImage: branchplatformapi:latest
+  branch-platform-infra:postgresAdminUser: branchadmin
+  branch-platform-infra:jwtAudience: branch-platform-api
+  branch-platform-infra:jwtAuthority: https://your-oidc-provider
