@@ -15,3 +15,7 @@ flowchart LR
   API --> OTel[(OpenTelemetry)]
   Worker --> OTel
 ```
+
+## Documentation
+
+- [Observability proof](docs/observability.md)
